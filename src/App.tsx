@@ -632,6 +632,15 @@ const ContactPage = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
+const MOCK_WORKERS: WorkerProfile[] = [
+  { id: 1, email: "moussa@example.com", role: "worker", full_name: "Moussa Diop", location: "Dakar, Sénégal", specialty: "Plombier", bio: "Expert en plomberie sanitaire et industrielle avec 10 ans d'expérience.", experience_years: 10, rating: 4.8, avatar_url: "https://picsum.photos/seed/moussa/400/400", reviews: [] },
+  { id: 2, email: "fatou@example.com", role: "worker", full_name: "Fatou Sow", location: "Abidjan, Côte d'Ivoire", specialty: "Électricienne", bio: "Spécialisée en installation solaire et maintenance électrique.", experience_years: 7, rating: 4.9, avatar_url: "https://picsum.photos/seed/fatou/400/400", reviews: [] },
+  { id: 3, email: "kofi@example.com", role: "worker", full_name: "Kofi Mensah", location: "Accra, Ghana", specialty: "Maçon", bio: "Maître maçon spécialisé dans la construction écologique.", experience_years: 15, rating: 4.7, avatar_url: "https://picsum.photos/seed/kofi/400/400", reviews: [] },
+  { id: 4, email: "amina@example.com", role: "worker", full_name: "Amina Traoré", location: "Bamako, Mali", specialty: "Peintre", bio: "Artiste peintre et décoratrice d'intérieur.", experience_years: 5, rating: 4.6, avatar_url: "https://picsum.photos/seed/amina/400/400", reviews: [] },
+  { id: 5, email: "jean@example.com", role: "worker", full_name: "Jean Kabore", location: "Ouagadougou, Burkina Faso", specialty: "Menuisier", bio: "Création de meubles sur mesure et charpente.", experience_years: 12, rating: 4.9, avatar_url: "https://picsum.photos/seed/jean/400/400", reviews: [] },
+  { id: 6, email: "sarah@example.com", role: "worker", full_name: "Sarah Okafor", location: "Lagos, Nigeria", specialty: "Soudeuse", bio: "Soudure de précision et structures métalliques.", experience_years: 8, rating: 4.5, avatar_url: "https://picsum.photos/seed/sarah/400/400", reviews: [] },
+];
+
 const WorkerFeed = ({ onSelectWorker }: { onSelectWorker: (id: number) => void }) => {
   const [workers, setWorkers] = useState<WorkerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -643,19 +652,23 @@ const WorkerFeed = ({ onSelectWorker }: { onSelectWorker: (id: number) => void }
   useEffect(() => {
     const fetchWorkers = async () => {
       setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (specialty && specialty !== "Tous") params.append('specialty', specialty);
-        if (search) params.append('search', search);
-        
-        const res = await fetch(`/api/workers?${params.toString()}`);
-        const data = await res.json();
-        setWorkers(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
+      
+      // Simulation logic
+      setTimeout(() => {
+        let filtered = [...MOCK_WORKERS];
+        if (specialty && specialty !== "Tous") {
+          filtered = filtered.filter(w => w.specialty === specialty);
+        }
+        if (search) {
+          const s = search.toLowerCase();
+          filtered = filtered.filter(w => 
+            w.full_name.toLowerCase().includes(s) || 
+            w.specialty.toLowerCase().includes(s)
+          );
+        }
+        setWorkers(filtered);
         setLoading(false);
-      }
+      }, 800);
     };
     fetchWorkers();
   }, [specialty, search]);
@@ -809,24 +822,25 @@ const LoginPage = ({ onBack, onAuthSuccess, onSwitchToRegister }: { onBack: () =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onAuthSuccess(data);
+    
+    // Simulation logic
+    setTimeout(() => {
+      const storedUsers = JSON.parse(localStorage.getItem('krafty_simulated_users') || '[]');
+      const user = storedUsers.find((u: any) => u.email === formData.email && u.password === formData.password);
+      
+      if (user) {
+        onAuthSuccess(user);
       } else {
-        alert(data.error);
+        // Default admin user for demo
+        if (formData.email === 'admin@krafty.com' && formData.password === 'admin') {
+          const adminUser: User = { id: 999, email: 'admin@krafty.com', full_name: 'Admin Krafty', role: 'client' };
+          onAuthSuccess(adminUser);
+        } else {
+          alert("Identifiants incorrects. (Utilisez admin@krafty.com / admin pour tester)");
+        }
       }
-    } catch (err) {
-      console.error(err);
-      alert("Une erreur est survenue.");
-    } finally {
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (
@@ -935,24 +949,30 @@ const RegisterPage = ({ onBack, onAuthSuccess, onSwitchToLogin }: { onBack: () =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onAuthSuccess(data);
-      } else {
-        alert(data.error);
+    
+    // Simulation logic
+    setTimeout(() => {
+      const storedUsers = JSON.parse(localStorage.getItem('krafty_simulated_users') || '[]');
+      
+      if (storedUsers.some((u: any) => u.email === formData.email)) {
+        alert("Cet email est déjà utilisé.");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error(err);
-      alert("Une erreur est survenue.");
-    } finally {
+
+      const newUser: User = {
+        id: Date.now(),
+        email: formData.email,
+        full_name: formData.full_name,
+        role
+      };
+
+      storedUsers.push(newUser);
+      localStorage.setItem('krafty_simulated_users', JSON.stringify(storedUsers));
+      
+      onAuthSuccess(newUser);
       setLoading(false);
-    }
+    }, 1500);
   };
 
   return (
@@ -1113,11 +1133,22 @@ const WorkerDetailPage = ({ workerId, onBack }: { workerId: number, onBack: () =
   useEffect(() => {
     const fetchWorker = async () => {
       setLoading(true);
-      const res = await fetch(`/api/workers/${workerId}`);
-      const data = await res.json();
-      setWorker(data);
-      setLoading(false);
-      window.scrollTo(0, 0);
+      
+      // Simulation logic
+      setTimeout(() => {
+        const w = MOCK_WORKERS.find(w => w.id === workerId);
+        if (w) {
+          setWorker({
+            ...w,
+            reviews: [
+              { id: 1, worker_id: w.id, client_id: 101, rating: 5, comment: "Excellent travail, très professionnel !", client_name: "Alice Dupont", created_at: "2024-01-15" },
+              { id: 2, worker_id: w.id, client_id: 102, rating: 4, comment: "Ponctuel et efficace.", client_name: "Bob Martin", created_at: "2024-02-10" }
+            ]
+          });
+        }
+        setLoading(false);
+        window.scrollTo(0, 0);
+      }, 600);
     };
     fetchWorker();
   }, [workerId]);
