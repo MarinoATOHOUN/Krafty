@@ -1,0 +1,5 @@
+{
+  "name": "Krafty - La Marketplace des Artisans d'Afrique",
+  "description": "Plateforme de mise en relation entre clients et artisans qualifiés en Afrique. Trouvez les meilleurs talents locaux pour vos travaux.",
+  "requestFramePermissions": ["geolocation"]
+}
